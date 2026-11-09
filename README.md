@@ -1,55 +1,53 @@
-# Тестовое задание: канвас на React Flow
+# Canvas Editor — React + React Flow
 
-Нужно сделать редактор с нодами «текст → генератор → результат», сохранением через REST и имитацией генерации изображения. Бэкенд готов, фронтенд добавьте в `apps/web`.
+Редактор на React Flow с нодами «текст → генератор → результат»: сборка графа на канвасе, имитация генерации изображения, сохранение графа через REST. React 19 + TypeScript + Vite.
 
-Для отбора нужно выполнить оба тестовых: [оформление заказа](https://github.com/instatdigital/frontend-checkout-challenge) и [канвас на React Flow](https://github.com/instatdigital/frontend-canvas-challenge). Пришлите ссылки на оба решения.
+## Возможности
 
-[Условия задания](docs/ASSIGNMENT.md) · [Работа с API](docs/INTEGRATION.md) · [Критерии оценки](docs/EVALUATION.md)
+- Канвас на React Flow: ноды трёх типов — текст, генератор, результат
+- Связывание и перетаскивание нод, панель действий (Toolbar)
+- Автосохранение графа на сервер (`useAutoSave`)
+- Запуск генерации с опросом статуса (`useGeneration`)
+- Загрузка сохранённого графа при старте (`useGraphLoader`)
+- Единый HTTP-клиент с централизованной обработкой ошибок
 
-Главный критерий — обобщение кода и минимум повторяющихся операций. Одинаковые проверки HTTP-ответов и разбор ошибок в компонентах недопустимы. Отдельно оцениваем стоимость обработки данных: лишние проходы, копирования и повторные поиски снижают результат.
+## Структура фронтенда (apps/web/src)
+
+```text
+api/           # HTTP-клиент и endpoints: spaces, graph, generations
+components/    # Canvas, Toolbar, кастомные ноды (nodes/)
+hooks/         # useAutoSave, useGeneration, useGraphLoader
+store.ts       # состояние приложения
+types.ts       # типы графа и нод
+```
 
 ## Запуск
 
 Потребуются Node.js 24.x и npm 11.x. База данных и ключи внешних сервисов не нужны.
 
 ```sh
-git clone https://github.com/instatdigital/frontend-canvas-challenge.git
-cd frontend-canvas-challenge
+git clone https://github.com/Saga6569/frontend-canvas-solution.git
+cd frontend-canvas-solution
 npm ci
-npm run dev
+npm run dev        # API на :4001
+# в другом терминале:
+npm run dev:web    # фронтенд
 ```
 
-Swagger: [http://localhost:4001/docs/](http://localhost:4001/docs/). Спецификация: [http://localhost:4001/openapi.json](http://localhost:4001/openapi.json) и [файл в репозитории](docs/openapi.json).
+Swagger API: [http://localhost:4001/docs/](http://localhost:4001/docs/). Спецификация: [http://localhost:4001/openapi.json](http://localhost:4001/openapi.json) и [файл в репозитории](docs/openapi.json).
 
-В Swagger создайте пространство через `POST /api/spaces`, затем получите его граф. Авторизация не нужна. Все пространства видны в одном локальном экземпляре сервера.
-
-## Структура и команды
-
-```text
-apps/api/             бэкенд
-apps/web/             ваш фронтенд
-packages/contracts/   схемы API и типы TypeScript
-docs/                 задание и документация
-scripts/              проверки
-```
-
-Назовите приложение в `apps/web` как `@canvas/web` и добавьте команды его запуска в README решения. Пока фронтенда нет, `npm run dev` запускает только API.
-
-```sh
-npm run check       # форматирование, сборка, тесты, OpenAPI
-npm run build
-npm start           # собранный бэкенд
-npm run smoke       # проверка по HTTP; API должен работать
-```
+Проект использует npm workspaces: `apps/api` — бэкенд, `apps/web` — фронтенд (`@canvas/web`), `packages/contracts` — схемы API и типы TypeScript.
 
 ## Настройки
 
-Адрес по умолчанию — `127.0.0.1:4001`. При необходимости скопируйте `.env.example` в `.env` и измените `PORT`. Для проверки другого адреса: `BASE_URL=http://localhost:4101 npm run smoke`.
+Адрес API по умолчанию — `127.0.0.1:4001`. При необходимости скопируйте `.env.example` в `.env` и измените `PORT`. Данные сохраняются в `.data/store.json`; для сброса остановите сервер и выполните `npm run data:reset`.
 
-Фронтенд может работать на любом HTTP-порту `localhost`, `127.0.0.1` или `[::1]`. Другие адреса задаются в `CORS_ORIGINS`. Cookies не нужны.
+Генерация тестовая: после заданной задержки сервер возвращает локальное SVG-изображение или ошибку сценария. Внешних запросов нет.
 
-Данные сохраняются в `.data/store.json`. Используйте один процесс API на один файл. Для сброса остановите сервер и выполните `npm run data:reset`. Если меняли `DATA_FILE`, свой файл удалите вручную при остановленном сервере.
+## Проверки
 
-Генерация тестовая: после заданной задержки сервер возвращает локальное SVG-изображение или ошибку сценария. Внешних запросов и списаний нет.
-
-Корневые команды сборки и тестов проверяют бэкенд. В решении добавьте отдельные команды запуска и сборки `apps/web`, а после установки его зависимостей обновите корневой `package-lock.json`. Схемы API в `packages/contracts` можно использовать напрямую или описать нужные типы у себя.
+```sh
+npm run check   # форматирование, сборка, тесты, OpenAPI
+npm run build
+npm run smoke   # проверка API по HTTP (API должен работать)
+```
